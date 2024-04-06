@@ -1,0 +1,26 @@
+{
+    "idf.portWin": "COM3",
+    "idf.adapterTargetName": "esp32s3",
+    "idf.openOcdConfigs": [
+        "board/esp32s3-bridge.cfg"
+    ],
+    "idf.flashType": "UART",
+    "files.associations": {
+        "freertos.h": "c",
+        "regex": "cpp",
+        "limits": "cpp",
+        "format": "c",
+        "array": "cpp",
+        "vector": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp",
+        "chrono": "cpp",
+        "cstring": "cpp",
+        "cstdint": "cpp",
+        "algorithm": "cpp",
+        "random": "cpp",
+        "utility": "cpp",
+        "esp_timer.h": "c",
+        "xiosbase": "cpp"
+    }
+}
