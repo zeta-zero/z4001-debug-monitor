@@ -94,14 +94,15 @@ public:
         // LocalGyro6D.Start();
         LocalTemp.SetUpdateFreq(zDrv_TMP112A::CR250ms);
         LocalLCD.SetLight(100);
-        for(int i = 0;i<240*320;i++){
-            RGBBuf[i] = 0xFF00;
+        for(int i = 0;i<240*160;i++){
+            RGBBuf[i] = 0x8888;
         }
-        for(int i = 0;i<5;i++)
-        {
-            LocalLCD.DrawBitMap(100,100,150,150,(const void*)RGBBuf);
-            vTaskDelay(100);
+        for(int i = 240 * 160;i<240*320;i++){
+            RGBBuf[i] = 0x08DD;
         }
+
+        LocalLCD.DrawBitMap(0,0,240-1,320-1,(const void*)RGBBuf);
+        
         
     }
 

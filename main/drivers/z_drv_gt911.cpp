@@ -216,7 +216,7 @@ void zDrv_GT911::Init(zHalBase_I2C *_i2c,zHalBase_GPIO *_rst,zHalBase_GPIO *_int
 {
     assert(_i2c != nullptr || _rst != nullptr || _intr != nullptr);
     LocalI2C = _i2c;
-    IICAddr = I2C_ADDR_1;
+    IICAddr = I2C_ADDR_0;
     IICAddr0 = I2C_ADDR_0;
     IICAddr1 = I2C_ADDR_1;
     CheckCount = 0;
@@ -367,7 +367,7 @@ void zDrv_GT911::UpdateConfig(const uint8_t _buf[184])
         data[2] += _buf[i];
     }
     data[2] = (~data[2]) + 1;
-    data[3] = 1;
+    data[3] = 0;
     LocalI2C->Write(IICAddr,data,4);
     
     // SetModel(GT_COMMAND_EXIST_CHG);

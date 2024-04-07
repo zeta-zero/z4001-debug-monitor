@@ -68,7 +68,7 @@ public:
         esp_lcd_panel_io_i80_config_t io_config = {};
         io_config.cs_gpio_num = _csio;
         io_config.pclk_hz = 10000000;
-        io_config.trans_queue_depth = 2;
+        io_config.trans_queue_depth = 10;
         io_config.dc_levels = {
                 .dc_idle_level = 0,
                 .dc_cmd_level = 0,
@@ -80,7 +80,7 @@ public:
                 .reverse_color_bits = 0,
                 .swap_color_bytes = 0,
                 .pclk_active_neg = 0,
-                .pclk_idle_low = 0,
+                .pclk_idle_low = 1,
         };
         io_config.on_color_trans_done = example_notify_lvgl_flush_ready;
         io_config.user_ctx = nullptr;
@@ -98,7 +98,7 @@ public:
 
     void DrawBitmap(uint16_t _x0,uint16_t _y0,uint16_t _x1,uint16_t _y1,const void* _colors)
     {
-        esp_lcd_panel_draw_bitmap(PanelHandle, _x0, _y0, _x1+1, _y1+1, _colors);
+        ESP_ERROR_CHECK(esp_lcd_panel_draw_bitmap(PanelHandle, _x0, _y0, _x1+1, _y1+1, _colors));
     }
 
 private:
@@ -123,7 +123,7 @@ private:
         esp_lcd_panel_init(PanelHandle);
         switch(_chipid){
             case ST7789:{
-                esp_lcd_panel_invert_color(PanelHandle, true);
+                esp_lcd_panel_invert_color(PanelHandle, false);
                 esp_lcd_panel_set_gap(PanelHandle, 0, 0);
             }break;
             default:break;
