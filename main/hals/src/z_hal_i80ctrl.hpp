@@ -32,6 +32,12 @@ limitations under the License.
 #include "esp_lcd_panel_ops.h"
 #include "../base/z_halbase_i80ctrl.hpp"
 
+
+static bool example_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
+{
+    return false;
+}
+
 class zHal_I80Ctrl: public zHalBase_I80Ctrl{
 public:
     typedef enum{
@@ -41,7 +47,7 @@ public:
     }lcd_chip_id_t;
 
     void Init(gpio_num_t _ios[24],uint8_t _ionum,gpio_num_t _dcio,gpio_num_t _wrio,gpio_num_t _csio,gpio_num_t _rstio,
-              lcd_chip_id_t _chipid)
+              lcd_chip_id_t _chipid,uint32_t _w = 240,uint32_t _h = 320)
     {
         BusHanle = nullptr;
         esp_lcd_i80_bus_config_t bus_config = {
@@ -50,7 +56,7 @@ public:
             .clk_src = LCD_CLK_SRC_DEFAULT,
             .data_gpio_nums = {-1},
             .bus_width = _ionum,
-            .max_transfer_bytes = 240 * 360 * 2,
+            .max_transfer_bytes = _w * _h * 2,
             .psram_trans_align = 64,
             .sram_trans_align = 4,
         };
@@ -62,10 +68,10 @@ public:
         esp_lcd_panel_io_i80_config_t io_config = {};
         io_config.cs_gpio_num = _csio;
         io_config.pclk_hz = 10000000;
-        io_config.trans_queue_depth = 10;
+        io_config.trans_queue_depth = 2;
         io_config.dc_levels = {
                 .dc_idle_level = 0,
-                .dc_cmd_level = 1,
+                .dc_cmd_level = 0,
                 .dc_dummy_level = 0,
                 .dc_data_level = 1,
         };
@@ -76,7 +82,7 @@ public:
                 .pclk_active_neg = 0,
                 .pclk_idle_low = 0,
         };
-        io_config.on_color_trans_done = nullptr;
+        io_config.on_color_trans_done = example_notify_lvgl_flush_ready;
         io_config.user_ctx = nullptr;
         io_config.lcd_cmd_bits = _ionum;
         io_config.lcd_param_bits = _ionum;
@@ -92,7 +98,7 @@ public:
 
     void DrawBitmap(uint16_t _x0,uint16_t _y0,uint16_t _x1,uint16_t _y1,const void* _colors)
     {
-        esp_lcd_panel_draw_bitmap(PanelHandle, _x0, _y0, _x1, _y1, _colors);
+        esp_lcd_panel_draw_bitmap(PanelHandle, _x0, _y0, _x1+1, _y1+1, _colors);
     }
 
 private:
@@ -118,7 +124,7 @@ private:
         switch(_chipid){
             case ST7789:{
                 esp_lcd_panel_invert_color(PanelHandle, true);
-                esp_lcd_panel_set_gap(PanelHandle, 0, 20);
+                esp_lcd_panel_set_gap(PanelHandle, 0, 0);
             }break;
             default:break;
         }

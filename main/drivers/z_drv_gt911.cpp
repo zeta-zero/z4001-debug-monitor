@@ -165,7 +165,7 @@ limitations under the License.
 #define GT_POINT_5                  (uint16_t)0X816F
 #define GT_MAX_POINT                5
 
-#define GT_TPBASE_REG               (uint16_t)0x8157      // 触摸点基准地址
+#define GT_TPBASE_REG               (uint16_t)0X814F      // 触摸点基准地址
 
 #define GT_TOUCH_DATA_READY  0x80    // is ready for host to read
 #define GT_TOUCH_LARGE       0x40    // indicates there is large-area touch on TP.
@@ -174,8 +174,8 @@ limitations under the License.
 
 // VALUE ------------------------------------------------------------
 const uint8_t zDrv_GT911::DefaultConfigTable[] = {
-    0x42, 0xF0, 0x00, 0x40, 0x01, 0x05, 0x0D, 0x00, 0x01, 0x0F,     /* ver,x_l,x_h,y_l,y_h,touch_num,mode_sw */
-    0x28, 0x0f, 0x50, 0x32, 0x03, 0x05, 0x00, 0x00, 0x00, 0x00,     /* 0x8051 - 0x805A,*/
+    0x42, 0x40, 0x01, 0xF0, 0x00, 0x05, 0xCF, 0x00, 0x01, 0x0F,     /* ver,x_l,x_h,y_l,y_h,touch_num,mode_sw */
+    0x14, 0x01, 0x50, 0x30, 0x05, 0x05, 0x00, 0x00, 0x00, 0x00,     /* 0x8051 - 0x805A,*/
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x8a, 0x2a, 0x0c,     /* 0x805B - 0x8064,*/
     0x45, 0x47, 0x0c, 0x08, 0x00, 0x00, 0x00, 0x40, 0x03, 0x2c,     /* 0x8065 - 0x806E,*/
     0x00, 0x01, 0x00, 0x00, 0x00, 0x03, 0x64, 0x32, 0x00, 0x00,     /* 0x806F - 0x8078,*/
@@ -241,7 +241,6 @@ bool zDrv_GT911::Check(void)
     CheckCount++;
     ESP_LOGI("gt911","chip : %s",(char*)buf);
     if(memcmp((char*)buf,"911",3) == 0){
-
         res = true;
     }
     if(CheckCount > 3){
@@ -261,19 +260,19 @@ bool zDrv_GT911::Check(void)
 void zDrv_GT911::Start(void)
 {
     uint8_t buf[1] = {0};
-    uint8_t reg[2] = {(uint8_t)((GT_CFGS_REG >> 8) & 0xFF),(uint8_t)(GT_CFGS_REG & 0xFF)};
+    uint8_t reg[3] = {(uint8_t)((GT_CFGS_REG >> 8) & 0xFF),(uint8_t)(GT_CFGS_REG & 0xFF),0};
     uint8_t count = 0;
 
     while(Check() == false && count++ < 5);
-
+    LocalI2C->Write(IICAddr,reg,3);
     LocalI2C->WrRd(IICAddr,reg,2,buf,1);
-    if(buf[0] == (uint8_t)'A'){
+    // if(buf[0] == (uint8_t)'A')
+    {
         ESP_LOGI("gt911","update config");
         UpdateConfig(DefaultConfigTable);
     }
 
-    SetModel(GT_COMMAND_ENTER_RCV);
-
+    SetModel(0);
     CleanStatus();
 }
 
@@ -349,7 +348,7 @@ void zDrv_GT911::UpdateConfig(const uint8_t _buf[184])
 {
     uint8_t data[32]={0};
     
-    SetModel(GT_COMMAND_ENTER_CHG);
+    // SetModel(GT_COMMAND_ENTER_CHG);
 
     data[0] = (GT_CFGS_REG >> 8) & 0xFF;
     data[1] = GT_CFGS_REG & 0xFF;
@@ -371,7 +370,7 @@ void zDrv_GT911::UpdateConfig(const uint8_t _buf[184])
     data[3] = 1;
     LocalI2C->Write(IICAddr,data,4);
     
-    SetModel(GT_COMMAND_EXIST_CHG);
+    // SetModel(GT_COMMAND_EXIST_CHG);
 
 }
 
@@ -384,12 +383,21 @@ void zDrv_GT911::UpdateConfig(const uint8_t _buf[184])
 zDrv_GT911::point2_list_t zDrv_GT911::GetPoints(void)
 {
     point2_list_t res = {0};
-    uint8_t sta = GetStatus();
-    if((sta & GT_TOUCH_DATA_READY) == 0 || (sta & GT_TOUCH_NUMBER) == 0){
+    uint8_t sta = 0;
+
+    if(LocalIntr->GetLevel() == 0){
         goto end;
     }
-    res = ReadPoints(sta & GT_TOUCH_NUMBER);
-    CleanStatus();
+    sta = GetStatus();
+    ESP_LOGI("drv_911","sta : 0x%x",sta);
+
+    if((sta & GT_TOUCH_DATA_READY) != 0){
+        if((sta & GT_TOUCH_NUMBER) != 0){
+            res = ReadPoints(sta & GT_TOUCH_NUMBER);
+        }
+        CleanStatus();
+    }
+    
 end:
     return res;
 }
@@ -430,14 +438,18 @@ void zDrv_GT911::CleanStatus(void)
  */
 void zDrv_GT911::SetModel(uint8_t _command)
 {
-    uint8_t buf[3] = {(uint8_t)(GT_COMMANDCHECK_REG >> 8),(uint8_t)(GT_COMMANDCHECK_REG & 0xFF),_command};
+    uint8_t buf[3] = {0};
 
-    LocalI2C->Write(IICAddr,buf,3);
+    buf[2] = _command;
     if(_command > 0x07){
-        buf[0] = (uint8_t)(GT_COMMAND_REG >> 8);
-        buf[1] = (uint8_t)(GT_COMMAND_REG & 0xFF);
+        buf[0] = (uint8_t)(GT_COMMANDCHECK_REG >> 8);
+        buf[1] = (uint8_t)(GT_COMMANDCHECK_REG & 0xFF);
         LocalI2C->Write(IICAddr,buf,3);
     }
+    
+    buf[0] = (uint8_t)(GT_COMMAND_REG >> 8);
+    buf[1] = (uint8_t)(GT_COMMAND_REG & 0xFF);
+    LocalI2C->Write(IICAddr,buf,3);
     
 }
 

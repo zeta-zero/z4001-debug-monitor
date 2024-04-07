@@ -40,7 +40,7 @@ limitations under the License.
 gpio_num_t rgbio[3] = {GPIO_NUM_8,GPIO_NUM_18,GPIO_NUM_17};
 gpio_num_t lcdgpio = GPIO_NUM_45;
 
-uint16_t RGBBuf[240*320] = {0x8888};
+uint16_t RGBBuf[240*320] = {0};
 
 class zDriver{
 private:
@@ -95,9 +95,14 @@ public:
         LocalTemp.SetUpdateFreq(zDrv_TMP112A::CR250ms);
         LocalLCD.SetLight(100);
         for(int i = 0;i<240*320;i++){
-            RGBBuf[i] = 0x8888;
+            RGBBuf[i] = 0xFF00;
         }
-        LocalLCD.DrawBitMap(0,0,(uint16_t)-1,(uint16_t)-1,(const void*)RGBBuf);
+        for(int i = 0;i<5;i++)
+        {
+            LocalLCD.DrawBitMap(100,100,150,150,(const void*)RGBBuf);
+            vTaskDelay(100);
+        }
+        
     }
 
 };
