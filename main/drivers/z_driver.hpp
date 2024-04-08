@@ -97,8 +97,8 @@ public:
         // LocalGyro6D.Start();
         LocalTemp.SetUpdateFreq(zDrv_TMP112A::CR250ms);
         LocalWiFi.Init();
-        char ssid[32] = "texeg1";
-        char pw[64] = "texeg401";
+        char ssid[32] = "夢の寮";
+        char pw[64] = "dh222222";
         LocalWiFi.Connect(ssid,pw);
         LocalWiFi.Start();
         LocalTouchCtrl.Start();
@@ -110,7 +110,6 @@ public:
             RGBBuf[i] = 0x08DD;
         }
         LocalLCD.DrawBitMap(0,0,240-1,320-1,(const void*)RGBBuf);
-        
         
     }
 

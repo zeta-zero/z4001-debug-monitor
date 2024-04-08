@@ -45,17 +45,49 @@ class zHal_Bluetooth {
 public:
     void Init(uint8_t _mode)
     {
+        esp_bt_mode_t mode = ESP_BT_MODE_IDLE;
         if(_mode == HAL_BTMODE_A2DP){
-            esp_bt_controller_mem_release(ESP_BT_MODE_BLE);
+            ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_BLE));
         }
-        else if(_mode == HAL_BTMODE_GATTC || _mode == HAL_BTMODE_GATTS){
-            esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
+        else if(_mode == HAL_BTMODE_GATTC || _mode == HAL_BTMODE_GATTS ||
+                _mode == (HAL_BTMODE_GATTC && HAL_BTMODE_GATTS)){
+            ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
+        }
+
+        if(_mode & HAL_BTMODE_A2DP != 0){
+            mode |= ESP_BT_MODE_CLASSIC_BT;
+        }
+        if(_mode & (HAL_BTMODE_GATTC && HAL_BTMODE_GATTS) != 0){
+            mode |= ESP_BT_MODE_BLE;
         }
         
-        
+        esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+        ESP_ERROR_CHECK(esp_bt_controller_init(&bt_cfg));
+        ESP_ERROR_CHECK(esp_bt_controller_enable(mode));
+        esp_bluedroid_config_t bluedroid_cfg = BT_BLUEDROID_INIT_CONFIG_DEFAULT();
+        ESP_ERROR_CHECK(esp_bluedroid_init_with_cfg(&bluedroid_cfg));
+
+        esp_bt_pin_type_t pin_type = ESP_BT_PIN_TYPE_VARIABLE;
+        esp_bt_pin_code_t pin_code;
+        esp_bt_gap_set_pin(pin_type, 0, pin_code);
+
+        if(_mode & HAL_BTMODE_A2DP != 0){
+            bt_app_task_start_up();
+        }
+    }
+
+    void Enable(bool _enable)
+    {
+        _enable?esp_bluedroid_enable() : esp_bluedroid_disable();
     }
 
 private:
+
+    void A2DPInit(void)
+    {
+
+
+    }
 
 };
 
