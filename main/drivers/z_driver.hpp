@@ -26,11 +26,13 @@ limitations under the License.
 
 #include "cstdint"
 #include "driver/gpio.h"
+#include "nvs_flash.h"
 #include "../hals/src/z_hal_i2c.hpp"
 #include "../hals/src/z_hal_pwm.hpp"
 #include "../hals/src/z_hal_gpio.hpp"
 #include "../hals/src/z_hal_i80ctrl.hpp"
 #include "../hals/src/z_hal_sdmmc.hpp"
+#include "../hals/src/z_hal_wifi.hpp"
 #include "z_drv_rgbled.hpp"
 #include "z_drv_lsm6d.hpp"
 #include "z_drv_tmp112a.hpp"
@@ -52,6 +54,7 @@ private:
     zHal_I80Ctrl ST7789;
     zHal_SDMMC LocalSDMMC;
 public:
+    zHal_WiFi LocalWiFi;
     zDrv_RGBLED LocalRGBLED;
     zDrv_LSM6D LocalGyro6D;
     zDrv_TMP112A LocalTemp;
@@ -69,6 +72,7 @@ public:
     };
 
     void Init(void){
+        nvs_flash_init();
 
         LocalSDMMC.Init(GPIO_NUM_7,GPIO_NUM_6,GPIO_NUM_2,GPIO_NUM_15,GPIO_NUM_16,GPIO_NUM_4,GPIO_NUM_5);
         LocalTouchCtrl.Init(&LocalI2C,&GT911RST,&GT911INTR);
@@ -90,9 +94,14 @@ public:
         LocalI2C.AddDev(LocalTouchCtrl.IICAddr0);
         LocalI2C.AddDev(LocalTouchCtrl.IICAddr1);
 
-        LocalTouchCtrl.Start();
         // LocalGyro6D.Start();
         LocalTemp.SetUpdateFreq(zDrv_TMP112A::CR250ms);
+        LocalWiFi.Init();
+        char ssid[32] = "texeg1";
+        char pw[64] = "texeg401";
+        LocalWiFi.Connect(ssid,pw);
+        LocalWiFi.Start();
+        LocalTouchCtrl.Start();
         LocalLCD.SetLight(100);
         for(int i = 0;i<240*160;i++){
             RGBBuf[i] = 0x8888;
@@ -100,7 +109,6 @@ public:
         for(int i = 240 * 160;i<240*320;i++){
             RGBBuf[i] = 0x08DD;
         }
-
         LocalLCD.DrawBitMap(0,0,240-1,320-1,(const void*)RGBBuf);
         
         
