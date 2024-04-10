@@ -5,7 +5,9 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "..\\..\\SDK\\v5.2.1\\esp-idf\\components\\**",
-                "..\\..\\SDK\\v5.2.1\\esp-idf\\components\\newlib\\platform_include\\**"
+                "..\\..\\SDK\\v5.2.1\\esp-idf\\components\\newlib\\platform_include\\**",
+                "D:\\.espressif\\frameworks\\esp-idf-v5.2.1\\components\\**",
+                "D:\\.espressif\\frameworks\\esp-idf-v5.2.1\\components\\newlib\\platform_include\\**",
             ],
             "defines": [
                 "_DEBUG",
