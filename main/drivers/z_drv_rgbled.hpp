@@ -42,9 +42,9 @@ public:
     ~zDrv_RGBLED(void);
 
     typedef struct{
-        float h;
-        float s;
-        float v;
+        float H;
+        float S;
+        float V;
     }hsv_t;
 
     void SetRGB(uint32_t _rgb);
