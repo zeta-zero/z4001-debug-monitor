@@ -1,4 +1,5 @@
 set(COMPONENT_ADD_INCLUDEDIRS
+    comm
     hals
     hals/base
     hals/src
@@ -9,6 +10,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
 file(GLOB_RECURSE SOURCES 
      *.c
      *.cpp
+     comm/*.cpp
      hals/base/*.cpp
      hals/src/*.cpp
      drivers/*.cpp

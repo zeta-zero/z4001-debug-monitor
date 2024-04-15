@@ -27,9 +27,11 @@ limitations under the License.
 #include "cstdint"
 #include "driver/gpio.h"
 #include "nvs_flash.h"
+#include "../comm/z_comm_check.hpp"
 #include "../hals/src/z_hal_i2c.hpp"
 #include "../hals/src/z_hal_pwm.hpp"
 #include "../hals/src/z_hal_gpio.hpp"
+#include "../hals/src/z_hal_uart.hpp"
 #include "../hals/src/z_hal_i80ctrl.hpp"
 #include "../hals/src/z_hal_sdmmc.hpp"
 #include "../hals/src/z_hal_wifi.hpp"
@@ -54,6 +56,7 @@ private:
     zHal_I80Ctrl ST7789;
     zHal_SDMMC LocalSDMMC;
 public:
+    zHal_UART LocalUART;
     zHal_WiFi LocalWiFi;
     zDrv_RGBLED LocalRGBLED;
     zDrv_LSM6D LocalGyro6D;
@@ -74,6 +77,9 @@ public:
     void Init(void){
         nvs_flash_init();
 
+        LocalUART.Init(GPIO_NUM_43,GPIO_NUM_44);
+        uint8_t head[2] = {0x55,0xEE};
+        LocalUART.SetFrameFormat(head,2,2,1,z_comm_check::CheckSum8,nullptr,0);
         LocalSDMMC.Init(GPIO_NUM_7,GPIO_NUM_6,GPIO_NUM_2,GPIO_NUM_15,GPIO_NUM_16,GPIO_NUM_4,GPIO_NUM_5);
         LocalTouchCtrl.Init(&LocalI2C,&GT911RST,&GT911INTR);
 

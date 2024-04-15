@@ -115,22 +115,22 @@ zDrv_RGBLED::hsv_t zDrv_RGBLED::RGB2HSV(uint32_t _rgb)
     uint8_t min_rgb = _MIN(r,_MIN(g,b));
     hsv_t mhsv;
     float d = max_rgb - min_rgb;
-    mhsv.v = max_rgb;
-    mhsv.s = max_rgb == 0.0f? 0.0f : d / max_rgb;
+    mhsv.V = max_rgb;
+    mhsv.S = max_rgb == 0.0f? 0.0f : d / max_rgb;
     if(max_rgb == min_rgb){
-        mhsv.h = 0.0f;
+        mhsv.H = 0.0f;
     }
     else{
         if(max_rgb == r){
-            mhsv.h = (g - b) / d + (g < b?6:0);
+            mhsv.H = (g - b) / d + (g < b?6:0);
         }
         else if(max_rgb == g){
-            mhsv.h = (b - r) / d + 2;
+            mhsv.H = (b - r) / d + 2;
         }
         else if(max_rgb == b){
-            mhsv.h = (r - g) / d + 4;
+            mhsv.H = (r - g) / d + 4;
         }
-        mhsv.h /= 6;
+        mhsv.H /= 6;
     }
 
     return mhsv;
@@ -145,30 +145,30 @@ zDrv_RGBLED::hsv_t zDrv_RGBLED::RGB2HSV(uint32_t _rgb)
 uint32_t zDrv_RGBLED::HSV2RGB(hsv_t _val)
 {
     uint32_t res = 0;
-    uint8_t i = (uint8_t)(_val.h * 6);
-    float f = _val.h * 6 - i;
-    float p = _val.v * (i - _val.s);
-    float q = _val.v * (i - f * _val.s);
-    float t =  _val.v * (1 - (1 - f) * _val.s);
+    uint8_t i = (uint8_t)(_val.H * 6);
+    float f = _val.H * 6 - i;
+    float p = _val.V * (i - _val.S);
+    float q = _val.V * (i - f * _val.S);
+    float t =  _val.V * (1 - (1 - f) * _val.S);
 
     switch(i % 6){
         case 0:{
-            res = ((uint8_t)(_val.v * 255) << 16) + ((uint8_t)(t * 255) << 8) + ((uint8_t)(p * 255) << 0);
+            res = ((uint8_t)(_val.V * 255) << 16) + ((uint8_t)(t * 255) << 8) + ((uint8_t)(p * 255) << 0);
         }break;
         case 1:{
-            res = ((uint8_t)(q * 255) << 16) + ((uint8_t)(_val.v * 255) << 8) + ((uint8_t)(p * 255) << 0);
+            res = ((uint8_t)(q * 255) << 16) + ((uint8_t)(_val.V * 255) << 8) + ((uint8_t)(p * 255) << 0);
         }break;
         case 2:{
-            res = ((uint8_t)(p * 255) << 16) + ((uint8_t)(_val.v * 255) << 8) + ((uint8_t)(t * 255) << 0);
+            res = ((uint8_t)(p * 255) << 16) + ((uint8_t)(_val.V * 255) << 8) + ((uint8_t)(t * 255) << 0);
         }break;
         case 3:{
-            res = ((uint8_t)(p * 255) << 16) + ((uint8_t)(q * 255) << 8) + ((uint8_t)(_val.v * 255) << 0);
+            res = ((uint8_t)(p * 255) << 16) + ((uint8_t)(q * 255) << 8) + ((uint8_t)(_val.V * 255) << 0);
         }break;
         case 4:{
-            res = ((uint8_t)(t * 255) << 16) + ((uint8_t)(p * 255) << 8) + ((uint8_t)(_val.v * 255) << 0);
+            res = ((uint8_t)(t * 255) << 16) + ((uint8_t)(p * 255) << 8) + ((uint8_t)(_val.V * 255) << 0);
         }break;
         case 5:{
-            res = ((uint8_t)(_val.v * 255) << 16) + ((uint8_t)(p * 255) << 8) + ((uint8_t)(q * 255) << 0);
+            res = ((uint8_t)(_val.V * 255) << 16) + ((uint8_t)(p * 255) << 8) + ((uint8_t)(q * 255) << 0);
         }break;
     }
 
