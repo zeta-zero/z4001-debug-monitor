@@ -110,7 +110,6 @@ public:
             RGBBuf[i] = 0x08DD;
         }
         LocalLCD.DrawBitMap(0,0,240-1,320-1,(const void*)RGBBuf);
-        
     }
 
 };
