@@ -28,12 +28,14 @@ limitations under the License.
 #include "cstdint"
 #include "../base/z_halbase_i2c.hpp"
 #include "driver/i2c_master.h"
+#include "esp_log.h"
 
 #define ZDRV_I2C_DEV_NUM   8
 
 class zHal_I2C : public zHalBase_I2C{
 public:
     zHal_I2C(gpio_num_t _sda,gpio_num_t _scl,i2c_port_t _port = I2C_NUM_0){
+        
         Port = _port;
 
         i2c_master_bus_config_t i2c_mst_config = {};
@@ -45,6 +47,7 @@ public:
         i2c_mst_config.flags.enable_internal_pullup = true;
 
         i2c_new_master_bus(&i2c_mst_config, &BusHandle);
+
     }
 
     ~zHal_I2C(void){

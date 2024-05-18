@@ -41,10 +41,10 @@ limitations under the License.
 #include "z_drv_gt911.hpp"
 #include "z_drv_lcd.hpp"
 
-gpio_num_t rgbio[3] = {GPIO_NUM_8,GPIO_NUM_18,GPIO_NUM_17};
-gpio_num_t lcdgpio = GPIO_NUM_45;
+static gpio_num_t rgbio[3] = {GPIO_NUM_8,GPIO_NUM_18,GPIO_NUM_17};
+static gpio_num_t lcdgpio = GPIO_NUM_45;
 
-uint16_t RGBBuf[240*320] = {0};
+static uint16_t RGBBuf[240*320] = {0};
 
 class zDriver{
 private:
@@ -54,10 +54,10 @@ private:
     zHal_GPIO GT911RST;
     zHal_GPIO GT911INTR;
     zHal_I80Ctrl ST7789;
-    zHal_SDMMC LocalSDMMC;
 public:
     zHal_UART LocalUART;
     zHal_WiFi LocalWiFi;
+    zHal_SDMMC LocalSDMMC;
     zDrv_RGBLED LocalRGBLED;
     zDrv_LSM6D LocalGyro6D;
     zDrv_TMP112A LocalTemp;
@@ -78,6 +78,7 @@ public:
         nvs_flash_init();
 
         LocalUART.Init(GPIO_NUM_43,GPIO_NUM_44);
+        
         uint8_t head[2] = {0x55,0xEE};
         LocalUART.SetFrameFormat(head,2,2,1,z_comm_check::CheckSum8,nullptr,0);
         LocalSDMMC.Init(GPIO_NUM_7,GPIO_NUM_6,GPIO_NUM_2,GPIO_NUM_15,GPIO_NUM_16,GPIO_NUM_4,GPIO_NUM_5);

@@ -32,6 +32,7 @@ limitations under the License.
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_dpp.h"
+#include "esp_log.h"
 #include "nvs.h"
 
 class zHal_WiFi{
@@ -133,7 +134,7 @@ private:
             switch(event_id){
                 case IP_EVENT_STA_GOT_IP:{
                     ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-                    ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+                    ESP_LOGI("HAL_WIFI", "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
                 }break;
                 default:break;
             }
@@ -142,8 +143,6 @@ private:
     }
 
 };
-
-bool zHal_WiFi::IsConnected = false;
 
 
 #endif  // __Z_HAL_WIFI_HPP__

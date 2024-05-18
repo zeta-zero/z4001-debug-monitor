@@ -213,7 +213,6 @@ public:
     bool UpdateConfig(uint32_t _baudrate = 921600,uart_word_length_t _databits = UART_DATA_8_BITS,
                       uart_parity_t _parity = UART_PARITY_DISABLE, uart_stop_bits_t _stopbis = UART_STOP_BITS_1)
     {
-        bool res = false;
         uart_config_t config = {};
         config.baud_rate = _baudrate;
         config.data_bits =  _databits;

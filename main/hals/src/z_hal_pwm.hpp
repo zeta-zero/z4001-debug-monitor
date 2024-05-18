@@ -217,12 +217,6 @@ private:
 
 };
 
-// VLAUE ---------------------------------------------------------------------
-uint8_t zHal_PWM::ChannelID = 0;
-uint8_t zHal_PWM::LEDCTimerList = 0;
-uint8_t zHal_PWM::FadeEnableCount = 0;
-uint16_t zHal_PWM::ChannelRawData[ZHALPWM_CHANNEL_MAX] = {0};
-ledc_channel_config_t zHal_PWM::Channel[ZHALPWM_CHANNEL_MAX];
 
 
 #endif // __Z_HAL_PWM_HPP__

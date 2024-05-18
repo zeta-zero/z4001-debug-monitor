@@ -36,7 +36,7 @@ limitations under the License.
 
 class zHal_SDMMC{
 public:
-    const char Point[4] = "/SD";
+    const char Point[4] = "/sd";
 
     void Init(gpio_num_t _clk,gpio_num_t _cmd,gpio_num_t _cd,gpio_num_t _d0,gpio_num_t _d1,gpio_num_t _d2,gpio_num_t _d3)
     {    
@@ -104,7 +104,8 @@ private:
         esp_vfs_fat_sdmmc_mount_config_t mount_config = {
             .format_if_mount_failed = false,
             .max_files = 5,
-            .allocation_unit_size = 16 * 1024
+            .allocation_unit_size = 16 * 1024,
+            .disk_status_check_enable = true,
         };
         
         esp_err_t ret = esp_vfs_fat_sdmmc_mount(Point, &host, &slot_config, &mount_config, &Card);
