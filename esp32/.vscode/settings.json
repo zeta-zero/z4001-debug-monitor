@@ -22,6 +22,7 @@
         "random": "cpp",
         "utility": "cpp",
         "esp_timer.h": "c",
-        "xiosbase": "cpp"
+        "xiosbase": "cpp",
+        "cctype": "cpp"
     }
 }

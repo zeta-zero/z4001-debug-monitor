@@ -110,6 +110,19 @@ void zUnitLED::SetColor(uint32_t _rgb)
     NewColor = _rgb & 0xFFFFFF;
 }
 
+
+/**-------------------------------------------------------------------
+ * @fn     : SetColor
+ * @brief  : 设置颜色
+ * @param  : none
+ * @return : res
+ */
+void zUnitLED::SetColor(uint8_t _r,uint8_t _g,uint8_t _b)
+{
+    Model = Normal;
+    NewColor = ((_r << 16) & 0xFF0000) | ((_g << 8) & 0xFF00) | ((_b << 0) & 0xFF);
+}
+
 /**-------------------------------------------------------------------
  * @fn     : SetModel
  * @brief  : 设置运行模型

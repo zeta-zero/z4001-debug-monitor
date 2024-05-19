@@ -4,6 +4,7 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "apps/z_app_webserver.hpp"
+#include "apps/z_app_center.hpp"
 
 extern "C" void app_main(void)
 {
@@ -14,9 +15,11 @@ extern "C" void app_main(void)
     LocalUnits.Init();
     LocalUnits.RGBLED.SetModel(zUnitLED::RainBow);
     zApp_WebSvr WebSvr;
+    zAppCenter LocalCenter;
     while (1) {
         vTaskDelay(10 / portTICK_PERIOD_MS);
         LocalUnits.RGBLED.Tick(10);
+        LocalCenter.Tick(10);
         count++;
         if(count > 50){
             LocalUnits.Tick();

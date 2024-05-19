@@ -22,7 +22,9 @@ limitations under the License.
 --------------------------------------------------------------------*/
 
 #include "z_app_webserver.hpp"
+#include "z_app_aisle.hpp"
 #include "esp_log.h"
+#include "../comm/z_comm_base64.hpp"
 
 
 // DEFINE ------------------------------------------------------------
@@ -31,8 +33,16 @@ limitations under the License.
 #define CONST_RES_PATH(_VAL_) "/sd/Web/Home" # _VAL_
 
 #define URI_MATCH(_URI_,_BUF_,_LEN_) ((sizeof(_URI_) - 1) == _LEN_ && memcmp(_URI_,_BUF_,_LEN_) == 0)
+#define STRING_MATCH(_URI_,_BUF_,_LEN_) ((sizeof(_URI_) - 1) <= _LEN_ && memcmp(_URI_,_BUF_,(sizeof(_URI_) - 1)) == 0)
+
+#define OCT_BASE64_FLAG  "enB3B-ASE64"
+
 
 #define SPEC_URI_HOMW   "/home"
+
+#define TEXT_CONTENT_TYPE  "text/plain"
+
+#define POST_MAX_RECV_LEN    4096
 
 // TYPE ------------------------------------------------------------
 
@@ -73,7 +83,17 @@ zApp_WebSvr::zApp_WebSvr()
  */
 void zApp_WebSvr::RegURI(void)
 {
+    URINum = 0;
 
+    URIList[URINum].uri = AnyURIsName;
+    URIList[URINum].method = HTTP_GET;
+    URIList[URINum].handler = AnyGetHandle;
+    URINum++;
+    
+    URIList[URINum].uri = AnyURIsName;
+    URIList[URINum].method = HTTP_POST;
+    URIList[URINum].handler = AnyPostHandle;
+    URINum++;
 }
 
 
@@ -96,10 +116,9 @@ void zApp_WebSvr::Start()
     }
     esp_event_handler_register(ESP_HTTP_SERVER_EVENT,ESP_EVENT_ANY_ID,EventHandle,this);
     // Set URI handlers
-    URIList.uri = AnyURIsName;
-    URIList.method = HTTP_GET;
-    URIList.handler = AnyGetHandle;
-    httpd_register_uri_handler(Svr_Handle, &URIList);
+    for(int i = 0;i<URINum;i++){
+        httpd_register_uri_handler(Svr_Handle, &URIList[i]);
+    }
     ESP_LOGI(TAG, "Registering URI handlers");
 
     Enable = true;
@@ -202,7 +221,7 @@ esp_err_t zApp_WebSvr::AnyGetHandle(httpd_req_t *req)
     esp_err_t res = ESP_OK;
     size_t len = 0;
     size_t remain = 0,pos = 0;
-    const char* uribuf = NULL,*query = NULL,*fragment = NULL,*filepath = NULL,*suffix = NULL;
+    const char* uribuf = NULL,*query = NULL,*fragment = NULL,*suffix = NULL;
     size_t query_len = 0,fragment_len = 0,path_len = 0,offset = 0;
     char path[256];
     datapack_t data={NULL,0};
@@ -252,7 +271,7 @@ esp_err_t zApp_WebSvr::AnyGetHandle(httpd_req_t *req)
             }
         }
         else{
-            
+
         } 
     }
 
@@ -277,6 +296,118 @@ esp_err_t zApp_WebSvr::AnyGetHandle(httpd_req_t *req)
 
 end:
     ReleasDataPack(&data);
+    return res;
+}
+
+
+/**-------------------------------------------------------------------
+ * @fn     : AnyPostHandle
+ * @brief  : 
+ * @param  : none
+ * @return : res
+ */
+esp_err_t zApp_WebSvr::AnyPostHandle(httpd_req_t *req)
+{
+    /* 定义 HTTP POST 请求数据的目标缓存区
+     * httpd_req_recv() 只接收 char* 数据，但也可以是任意二进制数据（需要类型转换）
+     * 对于字符串数据，null 终止符会被省略，content_len 会给出字符串的长度 */
+    char *content = NULL,*senddata = NULL;
+    uint8_t* rawdata = NULL;
+    uint16_t rawlen = 0,aislelen = 0,sendlen = 0;
+    char contenttype[64];
+    size_t typelen = 0;
+    esp_err_t res = ESP_FAIL;
+    int timeoutcount = 0;
+    size_t remainlen = 0,procnum = 0;
+    int readlen = 0;
+
+    size_t recv_size = MIN(req->content_len, POST_MAX_RECV_LEN);
+    content = (char*)calloc(recv_size,1);
+
+    typelen = httpd_req_get_hdr_value_len(req,"Content-Type");
+    httpd_req_get_hdr_value_str(req,"Content-Type",contenttype,64);
+
+    remainlen = req->content_len;
+    while(remainlen > 0){
+        readlen = recv_size;
+        readlen = httpd_req_recv(req, content, readlen);
+        if (readlen < 0) {  /* 返回 0 表示连接已关闭 */
+            /* 检查是否超时 */
+            if (readlen == HTTPD_SOCK_ERR_TIMEOUT) {
+                timeoutcount++;
+                if(timeoutcount > 3){
+                    httpd_resp_send_408(req);
+                }
+                continue;
+            }
+            else{
+                httpd_resp_send_404(req);
+            }
+            goto end;
+        }
+        else if(readlen == 0){
+            break;
+        }
+        else{
+            timeoutcount = 0;
+            if(STRING_MATCH(TEXT_CONTENT_TYPE,contenttype,typelen)){
+                if(procnum == 0){
+                    if(STRING_MATCH(OCT_BASE64_FLAG,content,readlen)){
+                        if(req->content_len > POST_MAX_RECV_LEN){
+                            httpd_resp_send(req, OCT_BASE64_FLAG" Fail,Data Over 4096", sizeof(OCT_BASE64_FLAG" Fail,Data Over 4096")); 
+                            goto end;
+                        }
+                        else{
+                            rawlen = readlen - sizeof(OCT_BASE64_FLAG) + 1;
+                            rawdata = (uint8_t*)calloc(rawlen,1);
+                            rawlen = zCommBase64::Decode((uint8_t*)&content[sizeof(OCT_BASE64_FLAG)-1],readlen - sizeof(OCT_BASE64_FLAG) + 1,rawdata,rawlen);
+                            if(zAppAisle::Send(zAppAisle::Ch_HTTP_Post,zAppAisle::Ch_Center,rawdata,rawlen) != ESP_OK){
+                                httpd_resp_send(req, OCT_BASE64_FLAG" Fail,Dev No MEM", sizeof(OCT_BASE64_FLAG" Fail,Dev No MEM")); 
+                                goto end;
+                            }
+                            httpd_resp_set_status(req, "200 Ok");
+                            httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
+                            httpd_resp_send(req,"",0);
+
+                            if(zAppAisle::Recv(zAppAisle::Ch_HTTP_Post,NULL,rawdata,rawlen,&aislelen,100) != ESP_OK){
+                                if(httpd_resp_send(req, OCT_BASE64_FLAG" Fail,Dev No Resp", sizeof(OCT_BASE64_FLAG" Fail,Dev No Resp")) != ESP_OK){
+                                    ESP_LOGW(TAG,"Http Send Fail");
+                                }
+                                goto end;
+                            }
+                            if(aislelen  == 0){
+                                goto end;
+                            }
+                            sendlen = sizeof(OCT_BASE64_FLAG) + 4 * ((aislelen + 2) / 3);
+                            senddata = (char*)calloc(sizeof(OCT_BASE64_FLAG) + 4 * ((aislelen + 2) / 3),1);
+                            memcpy(senddata,OCT_BASE64_FLAG,sizeof(OCT_BASE64_FLAG) - 1);
+                            sendlen = zCommBase64::Encode(rawdata,aislelen,(uint8_t*)&senddata[sizeof(OCT_BASE64_FLAG)-1],sendlen);
+                            if(sendlen != 0){
+                                httpd_resp_set_type(req,TEXT_CONTENT_TYPE);
+                                httpd_resp_send(req, senddata, sendlen); 
+                            }
+                        }
+                    }
+                }
+                else{
+
+                }
+            }
+            else if(STRING_MATCH(HTTPD_TYPE_OCTET,contenttype,typelen)){
+
+            }
+            else{
+
+            }
+        }
+        procnum++;
+        remainlen -= readlen;
+    }
+    res = ESP_OK;
+end:
+    if(content != NULL){free(content);}
+    if(senddata != NULL){free(senddata);}
+    if(rawdata != NULL){free(rawdata);}
     return res;
 }
 

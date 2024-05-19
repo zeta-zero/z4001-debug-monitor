@@ -43,6 +43,7 @@ public:
 
     void Tick(uint32_t _ms);
     void SetColor(uint32_t _rgb);
+    void SetColor(uint8_t _r,uint8_t _g,uint8_t _b);
     void SetModel(led_model_t _model);
     void SetRate(uint32_t _rate);
 
