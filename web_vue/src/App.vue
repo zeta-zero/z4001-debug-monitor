@@ -43,23 +43,27 @@
 <script setup>
 </script>
 
-<style>
+<style scoped>
 @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css");
 
 #app {
-    background-color: lightgray;
+    --transition-time:0.3s;
+    --secondary-transition-time:0.1s;
+
+    background-color: var(--bsic-bg-color);
     height: 100%;
+    width: 100%;
     display: flex;
-    position: relative;
+    overflow:auto;
 }
 
 #app #z-sidebar {
-    justify-content: left;
-    background-color: darkolivegreen;
-    left: 0;
+    z-index: 10;
+    background-color: var(--secondary-bg-color);
     height: 100%;
     width: 80px;
-    transition: 0.3s;
+    transition: var(--transition-time);
+    position: fixed;
     overflow: hidden;
 }
 
@@ -68,56 +72,54 @@
 }
 
 #z-container {
-    width: 100%;
-    padding-top: 30px;
+    margin-top: 30px;
 }
 
 #z-sidebar .z-li {
     height: 60px;
-    padding: 0 10px 0 18px;
+    display: flex;
 }
 
 #z-sidebar .z-li .item-light{
-    height: 48px;
-    width: 4px;
+    height: inherit;
+    width: 8px;
     position: absolute;
     left: 0px;
-    transition: 0.6s;
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 4px;
+    transition: var(--transition-time);
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
 
 #z-sidebar .z-router-link {
-    color: whitesmoke;
-    height: 80%;
+    color: var(--primary-text-color);
+    flex: 1;
     display: flex;
     border-radius: 8px;
+    margin: 5px 10px 5px 18px;
     text-decoration: none;
-    transition: 0.6s;
+    transition: var(--secondary-transition-time);
 }
 
 #z-sidebar .z-router-link.router-link-exact-active {
-    color: lightblue;
+    color: var(--secondary-bg-color);
+    background-color: var(--secondary-color);
 }
 
-#z-sidebar:hover .z-li .z-router-link.router-link-exact-active {
-    background-color: chocolate;
-}
-
-#z-sidebar .z-li:hover .item-light{
-    background-color: orange;
+#z-sidebar:hover .z-li .z-router-link.router-link-exact-active,
+#z-sidebar .z-li:hover .item-light {
+    background-color: var(--secondary-color);
 }
 
 #z-sidebar .z-li:hover .z-router-link{
-    background-color: lightgray;
+    background-color: var(--primary-border-color);
 }
 
 #z-sidebar i {
     color: inherit;
     align-self: center;
-    padding: 0px 10px 0 10px;
+    margin: 0 10px 0 10px;
     font-size: 24px;
-    transition: 0.3s;
+    transition: var(--secondary-transition-time);
 }
 
 #z-sidebar .item-name {
@@ -125,9 +127,8 @@
     display: flex;
     justify-content: left;
     align-items: center;
-    transition: 0.3s;
+    transition: var(--secondary-transition-time);
     overflow: hidden;
-    position: relative;
     left: -10px;
     opacity: 0;
 }
@@ -138,20 +139,22 @@
     display: flex;
     justify-content: left;
     align-items: center;
-    position: relative;
     left: 0;
     opacity: 1;
 }
 
 #z-sidebar .z-li:hover i,
 #z-sidebar .z-li:hover .item-name{
-    color: black;
+    color: inherit;
 }
 
 #app #z-content {
-    height: 100%;
     flex: 1;
-    padding: 20px;
-    background-color: cornflowerblue;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    margin-left: 80px;
+    padding: 10px;
+
 }
 </style>

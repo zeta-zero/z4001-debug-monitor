@@ -1,3 +1,21 @@
 html,body,#app{
     height: 100%;
+    
+}
+
+body{
+    --bsic-bg-color:#F0F0F0;
+
+    --primary-color:#007BFF;
+    --primary-bg-color:white;
+    --primary-text-color:#343A40;
+    --primary-import-color:#FFC107;
+    --primary-border-color:#DDDDDD;
+
+    --secondary-color:#20C997;
+    --secondary-bg-color:#F8F9FA;
+    --secondary-text-color:#666666;
+    --secondary-import-color:#ff70a6;
+    
+
 }
