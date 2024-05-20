@@ -1,7 +1,9 @@
 <template>
     <div id="localgrid">
         <label id="labelname">{{ name }}</label>
-        <input id="localinput" type="text"></input>
+        <input id="localinput" type="text" placeholder="Enter RGB Value"
+                v-model="inputVal"
+                :oninput="inputmatchfn" :maxlength="inputmaxlen"/>
         <button class="btn btn-primary" id="localbtn" @click="BtnProcEvent">{{ btnname }}</button>
     </div>
 </template>
@@ -10,9 +12,17 @@
 import {ref} from 'vue'
 import { defineProps,defineEmits } from 'vue'
 
+const inputVal = ref("");
+
 const localProps = defineProps({
     name: ref("name"),
-    btnname: ref("button")
+    btnname: ref("button"),
+    inputmaxlen:{
+        type: Number,
+        default: 2,
+        validator: (val) => typeof(val) == 'number'
+    },
+    inputmatchfn:ref(""),
 });
 
 const localEmits = defineEmits([
@@ -20,7 +30,7 @@ const localEmits = defineEmits([
 ]);
 
 function BtnProcEvent(){
-    localEmits('onclick');
+    localEmits('onclick',inputVal.value);
 }
 </script>
 

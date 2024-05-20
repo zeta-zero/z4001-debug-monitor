@@ -24,18 +24,19 @@ limitations under the License.
 #include "z_app_webserver.hpp"
 #include "z_app_aisle.hpp"
 #include "esp_log.h"
+#include "esp_err.h"
 #include "../comm/z_comm_base64.hpp"
 
 
 // DEFINE ------------------------------------------------------------
 #define TAG  "APP_WEBSVR"
 
-#define CONST_RES_PATH(_VAL_) "/sd/Web/Home" # _VAL_
+#define CONST_RES_PATH(_VAL_) "/sd/Web" # _VAL_
 
 #define URI_MATCH(_URI_,_BUF_,_LEN_) ((sizeof(_URI_) - 1) == _LEN_ && memcmp(_URI_,_BUF_,_LEN_) == 0)
 #define STRING_MATCH(_URI_,_BUF_,_LEN_) ((sizeof(_URI_) - 1) <= _LEN_ && memcmp(_URI_,_BUF_,(sizeof(_URI_) - 1)) == 0)
 
-#define OCT_BASE64_FLAG  "enB3B-ASE64"
+#define OCT_BASE64_FLAG  "enB3B-Base64"
 
 
 #define SPEC_URI_HOMW   "/home"
@@ -233,14 +234,17 @@ esp_err_t zApp_WebSvr::AnyGetHandle(httpd_req_t *req)
         goto end;
     }
     if(URI_MATCH("/",uribuf,len) || URI_MATCH("/home",uribuf,len)){
-        sprintf(path,"%s/Web/Home/index.html",LocalUnits.SDPath);
-        data = ReadDataFromPath(path);
+        // data = ReadDataFromPath(path);
         httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
+        sprintf(path,"%s/Web/index.html",LocalUnits.SDPath);
+        SendFile(req,path);
+        
     }
     else if(URI_MATCH("/favicon.ico",uribuf,len)){
-        sprintf(path,"%s/Web/Res/ticon.ico",LocalUnits.SDPath);
-        data = ReadDataFromPath(path);
+        // data = ReadDataFromPath(path);
         httpd_resp_set_type(req, "image/x-icon");
+        sprintf(path,"%s/Web/Res/ticon.ico",LocalUnits.SDPath);
+        SendFile(req,path);
     }
     else{
         query = (const char*)memchr(uribuf+1,'?',len - 1) + 1;
@@ -256,43 +260,40 @@ esp_err_t zApp_WebSvr::AnyGetHandle(httpd_req_t *req)
         path_len = len - fragment_len - query_len - offset;
         suffix = (const char*)memchr(uribuf,'.',path_len);
         if(suffix != NULL){
-            if(memchr(uribuf+1,'/',len - 1) == NULL){
-                sprintf(path,"%s/Web/Home%.*s",LocalUnits.SDPath,path_len,uribuf);
-            }
-            else{
-                sprintf(path,"%s/Web%.*s",LocalUnits.SDPath,path_len,uribuf);
-            }        
-            data = ReadDataFromPath(path);
             for(int i = 0;i<sizeof(ContentTypeMap)/(sizeof(char*) * 2);i++){
                 if(strstr(uribuf,ContentTypeMap[i][0]) != NULL){
                     httpd_resp_set_type(req, ContentTypeMap[i][1]);
                     break;
                 }
             }
+            sprintf(path,"%s/Web%.*s",LocalUnits.SDPath,path_len,uribuf);
+            SendFile(req,path);
+            // data = ReadDataFromPath(path);
+
         }
         else{
 
         } 
     }
 
-    if(data.Data == NULL || data.Len == 0){
-        httpd_resp_send_404(req);
-    }
-    else{
-        if(len < 512){
-            httpd_resp_send(req,(char*)data.Data,data.Len);
-        }
-        else{
-            remain = data.Len;
-            while(remain > 512){
-                httpd_resp_send_chunk(req,(char*)&data.Data[pos],512);
-                pos += 512;
-                remain -= 512;
-            }
-            httpd_resp_send_chunk(req,(char*)&data.Data[pos],remain);
-            httpd_resp_send_chunk(req,NULL,0);
-        }
-    }
+    // if(data.Data == NULL || data.Len == 0){
+    //     httpd_resp_send_404(req);
+    // }
+    // else{
+    //     if(len < 512){
+    //         httpd_resp_send(req,(char*)data.Data,data.Len);
+    //     }
+    //     else{
+    //         remain = data.Len;
+    //         while(remain > 512){
+    //             httpd_resp_send_chunk(req,(char*)&data.Data[pos],512);
+    //             pos += 512;
+    //             remain -= 512;
+    //         }
+    //         httpd_resp_send_chunk(req,(char*)&data.Data[pos],remain);
+    //         httpd_resp_send_chunk(req,NULL,0);
+    //     }
+    // }
 
 end:
     ReleasDataPack(&data);
@@ -459,6 +460,51 @@ void zApp_WebSvr::ReleasDataPack(zApp_WebSvr::datapack_t *_val)
     free(_val->Data);
     _val->Len = 0;
 }
+
+/**-------------------------------------------------------------------
+ * @fn     : ReleasDataPack
+ * @brief  : 
+ * @param  : none
+ * @return : res
+ */
+esp_err_t zApp_WebSvr::SendFile(httpd_req_t *req,const char* _filepath)
+{
+    esp_err_t res= ESP_FAIL;
+    size_t filelen = 0;
+    size_t sendlen = 0;
+    uint8_t *data = NULL;
+    FILE *file_content = NULL;
+    file_content = fopen(_filepath,"r");
+    if(file_content == NULL){
+        ESP_LOGW(TAG,"Open Fail %s",_filepath);
+        goto end;
+    }
+    // 获取文件大小
+    fseek(file_content,0,SEEK_END);
+    filelen = ftell(file_content);
+    sendlen = filelen>1024?1024:filelen;
+    // 恢复文件指针指向的位置，0
+    fseek(file_content,0,SEEK_SET);
+    // 申请内存
+    data = (uint8_t*)malloc(sendlen);
+    // 文件大小大于0 且 内存申请成功
+    while(filelen>0 && data != NULL){
+        sendlen = filelen>1024?1024:filelen;
+        sendlen = fread(data,1,sendlen,file_content);
+        if(sendlen == 0){
+            goto end;
+        }
+        httpd_resp_send_chunk(req,(char*)data,sendlen);
+        filelen -= sendlen;
+    }
+    httpd_resp_send_chunk(req,NULL,0);
+    
+end:
+    if(file_content){fclose(file_content);}
+    if(data != NULL){free(data);}
+    return res;
+}
+
 
 
 

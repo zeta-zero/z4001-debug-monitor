@@ -51,8 +51,8 @@ void zAppCenter::Tick(uint32_t _ms)
     zAppAisle::datapack_t *buf = NULL;
     if(zAppAisle::Recv(zAppAisle::Ch_Center,&buf) == ESP_OK){
         if(buf != NULL){
-            if(buf->Len == 3){
-                LocalUnits.RGBLED.SetColor(buf->Data[0],buf->Data[1],buf->Data[2]);
+            if(buf->Len == 10){
+                LocalUnits.RGBLED.SetColor(buf->Data[6],buf->Data[7],buf->Data[8]);
                 snedres = 1;
             }
             else{

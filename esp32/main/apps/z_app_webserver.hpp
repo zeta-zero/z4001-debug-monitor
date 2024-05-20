@@ -54,6 +54,7 @@ private:
     static esp_err_t AnyPostHandle(httpd_req_t *req);
     static datapack_t ReadDataFromPath(char* _filepath);
     static void ReleasDataPack(datapack_t *_val);
+    static esp_err_t SendFile(httpd_req_t *req,const char* _filepath);
 };
 
 
