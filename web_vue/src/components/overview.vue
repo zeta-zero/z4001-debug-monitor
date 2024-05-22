@@ -47,7 +47,7 @@ onMounted(() => {
             _min: 20,
             _max: 80,
             _defval: 40,
-            _color: '#58D9F9',
+            _color: '#007BFF',
         };
         demoti.value.LoadFn(tiobj);
     }
@@ -62,8 +62,10 @@ onUpdated(() => {
 setInterval(function () {
 
     if (demotlc.value) {
-        demotlc.value.Update("line1", Math.random() * 10 + 10);
-        demotlc.value.Update("line2", Math.random() * 10 + 10);
+        // demotlc.value.Update("line1", Math.random() * 10 + 10);
+        // demotlc.value.Update("line2", Math.random() * 10 + 10);
+        demotlc.value.UpdateMore([{name:'line1',val:Math.random() * 10 + 10,},
+                                  {name:'line2',val:Math.random() * 10 + 10,}])
     }
     if (demoti.value) {
         demoti.value.Update( Math.random() * 50 + 20);
