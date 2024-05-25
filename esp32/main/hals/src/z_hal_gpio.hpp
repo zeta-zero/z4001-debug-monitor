@@ -34,6 +34,7 @@ class zHal_GPIO : public zHalBase_GPIO{
 public:
     zHal_GPIO(gpio_num_t _io,gpio_mode_t _mode = GPIO_MODE_OUTPUT,gpio_int_type_t _intr = GPIO_INTR_DISABLE)
     {
+        Enable = false;
         IONum = _io;
         gpio_config_t cfg = {
             .pin_bit_mask = BIT64(IONum),
@@ -43,23 +44,35 @@ public:
             .pull_down_en = GPIO_PULLDOWN_ENABLE,
             .intr_type = _intr,
         };
-        assert(gpio_config(&cfg) == ESP_OK);
+        if(_io != GPIO_NUM_NC){
+            assert(gpio_config(&cfg) == ESP_OK);
+            Enable = true;
+        }
 
     }
     /* _hl : 0 or 1*/
     void SetLevel(uint32_t _hl)
     {
+        if(Enable == false){
+            return;
+        }
         gpio_set_level(IONum,_hl);
     }
 
     uint8_t GetLevel(void)
     {
+        if(Enable == false){
+            return 0xFF;
+        }
         return gpio_get_level(IONum) == 0?0:1;
     }
 
     /* 0 : out 1 : in*/
     void SetInOutModel(uint8_t _inout)
     {
+        if(Enable == false){
+            return;
+        }
         if(_inout == 0){
             gpio_set_direction(IONum,GPIO_MODE_OUTPUT);
         }
@@ -71,6 +84,7 @@ public:
 
 private:
     gpio_num_t IONum;
+    bool Enable;
 
 };
 

@@ -42,7 +42,7 @@ limitations under the License.
 #include "z_drv_lcd.hpp"
 
 static gpio_num_t rgbio[3] = {GPIO_NUM_8,GPIO_NUM_18,GPIO_NUM_17};
-static gpio_num_t lcdgpio = GPIO_NUM_45;
+static gpio_num_t lcdgpio = GPIO_NUM_3;
 
 static uint16_t RGBBuf[240*320] = {0};
 
@@ -60,17 +60,17 @@ public:
     zHal_SDMMC LocalSDMMC;
     zDrv_RGBLED LocalRGBLED;
     zDrv_LSM6D LocalGyro6D;
-    zDrv_TMP112A LocalTemp;
+    // zDrv_TMP112A LocalTemp;
     zDrv_GT911 LocalTouchCtrl;
     zDrv_LCD LocalLCD;
-    zDriver(void) : LocalI2C(GPIO_NUM_35,GPIO_NUM_36),
+    zDriver(void) : LocalI2C(GPIO_NUM_40,GPIO_NUM_39),
                     LEDPWM(rgbio,3),
                     LCDPWM(&lcdgpio,1),
-                    GT911RST(GPIO_NUM_37),
+                    GT911RST(GPIO_NUM_0),
                     GT911INTR(GPIO_NUM_38,GPIO_MODE_INPUT),
                     LocalRGBLED(&LEDPWM),
-                    LocalGyro6D(&LocalI2C,GPIO_NUM_42,GPIO_NUM_41),
-                    LocalTemp(&LocalI2C)
+                    LocalGyro6D(&LocalI2C,GPIO_NUM_42,GPIO_NUM_41)
+                    // LocalTemp(&LocalI2C)
     {
     };
 
@@ -85,24 +85,24 @@ public:
         LocalTouchCtrl.Init(&LocalI2C,&GT911RST,&GT911INTR);
 
         gpio_num_t lcdios[24];
-        lcdios[0] = GPIO_NUM_10;
-        lcdios[1] = GPIO_NUM_11;
-        lcdios[2] = GPIO_NUM_12;
-        lcdios[3] = GPIO_NUM_13;
-        lcdios[4] = GPIO_NUM_14;
-        lcdios[5] = GPIO_NUM_21;
-        lcdios[6] = GPIO_NUM_47;
-        lcdios[7] = GPIO_NUM_48;
-        ST7789.Init(lcdios,8,GPIO_NUM_46,GPIO_NUM_9,GPIO_NUM_3,GPIO_NUM_NC,zHal_I80Ctrl::ST7789);
+        lcdios[0] = GPIO_NUM_21;
+        lcdios[1] = GPIO_NUM_14;
+        lcdios[2] = GPIO_NUM_13;
+        lcdios[3] = GPIO_NUM_12;
+        lcdios[4] = GPIO_NUM_11;
+        lcdios[5] = GPIO_NUM_10;
+        lcdios[6] = GPIO_NUM_9;
+        lcdios[7] = GPIO_NUM_46;
+        ST7789.Init(lcdios,8,GPIO_NUM_48,GPIO_NUM_47,GPIO_NUM_45,GPIO_NUM_NC,zHal_I80Ctrl::ST7789);
         LocalLCD.Init(&ST7789,&LCDPWM,240,320);
 
         LocalI2C.AddDev(LocalGyro6D.IICAddr);
-        LocalI2C.AddDev(LocalTemp.IICAddr);
+        // LocalI2C.AddDev(LocalTemp.IICAddr);
         LocalI2C.AddDev(LocalTouchCtrl.IICAddr0);
         LocalI2C.AddDev(LocalTouchCtrl.IICAddr1);
 
         // LocalGyro6D.Start();
-        LocalTemp.SetUpdateFreq(zDrv_TMP112A::CR250ms);
+        // LocalTemp.SetUpdateFreq(zDrv_TMP112A::CR250ms);
         LocalWiFi.Init();
         char ssid[32] = "夢の寮";
         char pw[64] = "dh222222";
